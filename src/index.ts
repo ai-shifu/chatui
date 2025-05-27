@@ -1,7 +1,7 @@
-import 'intersection-observer';
+// import 'intersection-observer';
 
-export { default as clsx } from 'clsx';
-export { default as DOMPurify } from 'dompurify';
+// export { default as clsx } from 'clsx';
+// export { default as DOMPurify } from 'dompurify';
 
 export { importScript } from './utils/importScript';
 export { lazyComponent } from './utils/lazyComponent';

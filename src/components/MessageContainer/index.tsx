@@ -1,11 +1,12 @@
 /* eslint-disable no-underscore-dangle */
-import React, { useState, useEffect, useRef, useCallback, useImperativeHandle } from 'react';
-import { PullToRefresh, PullToRefreshHandle, ScrollToEndOptions } from '../PullToRefresh';
-import { Message, MessageProps } from '../Message';
-import { BackBottom } from '../BackBottom';
+import { DoubleRightOutlined } from '@ant-design/icons';
+import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import canUse from '../../utils/canUse';
-import throttle from '../../utils/throttle';
 import getToBottom from '../../utils/getToBottom';
+import throttle from '../../utils/throttle';
+import { BackBottom } from '../BackBottom';
+import { Message, MessageProps } from '../Message';
+import { PullToRefresh, PullToRefreshHandle, ScrollToEndOptions } from '../PullToRefresh';
 
 const listenerOpts = canUse('passiveListener') ? { passive: true } : false;
 
@@ -50,6 +51,17 @@ export const MessageContainer = React.forwardRef<MessageContainerHandle, Message
     const messagesRef = useRef<HTMLDivElement>(null);
     const scrollerRef = useRef<PullToRefreshHandle>(null);
     const lastMessage = messages[messages.length - 1];
+
+    // 是否显示滚动查看更多内容按钮
+    let showScrollMore = false;
+    const scroller = scrollerRef.current;
+    const wrapper = scroller && scroller.wrapperRef.current;
+    if (wrapper && lastMessage && lastMessage.position === 'left') {
+      if (!isNearBottom(wrapper, 0.1)) {
+        showScrollMore = true;
+      }
+    }
+
 
     const clearBackBottom = () => {
       setNewCount(0);
@@ -121,6 +133,14 @@ export const MessageContainer = React.forwardRef<MessageContainerHandle, Message
         return;
       }
 
+      if (lastMessage.position === 'left') {
+        // 左侧消息(AI 系统回复)，不进行自动滚屏而是判断判断提示是否有更多内容
+        // PS: 初始化阶段，最外层的 `scrollToEnd` 会把消息列表滚动到底部
+        // if (lastMessage !== messages[0]) {
+          return
+        // }
+      }
+
       if (lastMessage.position === 'right') {
         // 自己发的消息，强制滚动到底部
         scrollToEnd({ force: true });
@@ -189,6 +209,17 @@ export const MessageContainer = React.forwardRef<MessageContainerHandle, Message
             ))}
           </div>
         </PullToRefresh>
+
+        {showScrollMore ? (
+          <div className="scroll-more">
+            <button className="scroll-more-btn" onClick={() => {
+              scrollToEnd({ animated: true, force: true });
+            }}>
+              <DoubleRightOutlined className="scroll-more-icon" />
+            </button>
+          </div>
+        ) : null}
+
         {showBackBottom && (
           <BackBottom
             count={newCount}
